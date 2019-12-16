@@ -1,0 +1,13 @@
+register multiple self:
+  title: Register Self
+  description: Enables the user to register for matches
+
+register multiple others:
+  title: Register Others
+  description: Enables the user to register others for matches
+
+register multiple config:
+  title: Register Multiple Config
+  description: Enables the user to configure key parameters of Register Multiple
+
+  

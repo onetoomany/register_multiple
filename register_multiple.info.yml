@@ -1,0 +1,14 @@
+name: Register Multiple
+type: module
+description: Enables registration for multiple events
+package: Entity Registration Form
+core: 8.x
+configure: register_multiple.description
+dependencies:
+  - drupal:node
+  - erf:erf
+
+# Information added by Drupal.org packaging script on 2019-08-23
+version: '8.x-1.0'
+project: 'examples'
+datestamp: 1566573495
