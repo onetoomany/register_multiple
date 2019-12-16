@@ -1,0 +1,11 @@
+{
+    "name": "drupal/register_multiple",
+    "description": "Enables registration for multiple events",
+    "license": "GPL-2.0+",
+    "authors": [
+        {
+            "name": "Birty",
+            "email": "richard@birty.net"
+        }
+    ]
+}
