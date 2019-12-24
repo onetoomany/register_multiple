@@ -319,16 +319,16 @@ class RegistrationForm extends FormBase {
       $inner_array = array('target_id' => $nid, 'target_type' => 'node');
       $value_array = array(0 => $inner_array);
       $entity->set($settings['registration_field'] ,$value_array,TRUE);
-      
+      $is_valid_nid = FALSE;
       
       foreach ($form_input as $field=>$field_value) {
         if (strpos($field, '|') !== false) {
           $form_nid = substr($field,0,strpos($field, '|'));
           $field_name = substr($field,strpos($field, '|')+1);
           if ($form_nid == $nid) {
+            $is_valid_nid = TRUE;
             
-            
-            if (($existing_reg > 0) AND ($field_name != $settings['registration_field'] )) {
+            if ($field_name != $settings['registration_field'] ) {
               if (is_array($field_value[0])) {
                 $inner_array = array('value' => $field_value[0]['value'], 'target_id' => $field_value[0]['value']);
               } else {
@@ -340,21 +340,14 @@ class RegistrationForm extends FormBase {
           }
        }
       }
-      
-      //if ($existing_reg > 0) {
+      if ($is_valid_nid == TRUE) {
+        // only save the entity if the NID existed on the form
         $entity->save();
-      //}
+      }
     }
     
-    //  $this->messenger()->addMessage($this->t('You specified a title of %title.', ['%title' => $value]));
-    //if (count($field_value) ==0 ) {
-    //   $field_value = $form_state->GetUserInput($field);
-      //   null;
-      // }
-      
-    //$form_display = $form_state->get('form_display');
-    //$registration = $form_state->get('registration');
-    //$extracted = $form_display->extractFormValues($registration, $form, $form_state);
+    
+    $this->messenger()->addMessage(t('Registration for matches successful.'));
     
     
   }
