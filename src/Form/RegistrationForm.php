@@ -346,7 +346,6 @@ class RegistrationForm extends FormBase {
       }
     }
     
-    
     $this->messenger()->addMessage(t('Registration for matches successful.'));
     
     
