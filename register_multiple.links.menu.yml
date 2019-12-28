@@ -6,13 +6,6 @@ register_multiple.description:
   menu_name: reports
   expanded: TRUE
 
-register_multiple.registration_form:
-  title: My availability
-  description: Register for this season's matches.
-  route_name: register_multiple.registration_form
-  menu_name: account
-  weight: -9
-
 register_multiple.configuration_form:
   title: Register multiple
   description: Configure Register Multiple module
