@@ -5,6 +5,7 @@ namespace Drupal\register_multiple\Form;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\erf\Entity\Registration;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
 /**
  * Implements the SimpleForm form controller.
@@ -55,6 +56,14 @@ class RegistrationForm extends FormBase {
       $current_user = \Drupal::currentUser()->id();
 	} else {
       $current_user = $user->id();
+    }
+    
+    $perm = \Drupal::currentUser()->haspermission('register multiple others');
+    
+    if (($current_user != \Drupal::currentUser()->id()) AND !(\Drupal::currentUser()->haspermission('register multiple others'))){
+        //user does not have the rights to register this user for matches
+        $reason = 'The current user does not have the rights to register this user for matches.';
+        throw new AccessDeniedHttpException($reason);
     }
     
     $settings = $this->getRegistrationSettings();
@@ -282,6 +291,12 @@ class RegistrationForm extends FormBase {
     $form_values = $form_state->getValues(array());
     $form_input = $form_state->getUserInput(array());
     $user = $form_values['User'];
+    
+    if (($user != \Drupal::currentUser()->id()) AND !(\Drupal::currentUser()->haspermission('register multiple others'))){
+        //user does not have the rights to register this user for matches
+        $reason = 'The current user does not have the rights to register this user for matches.';
+        throw new AccessDeniedHttpException($reason);
+    }
     
     $settings = $this->getRegistrationSettings();
     
