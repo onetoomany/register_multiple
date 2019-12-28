@@ -47,11 +47,15 @@ class RegistrationForm extends FormBase {
     return $settings;
   }
   
-  public function buildForm(array $form, FormStateInterface $form_state) {
+  public function buildForm(array $form, FormStateInterface $form_state, $user = NULL) {
  
-    $current_user = \Drupal::currentUser()->id();
     $registration_list = array ();
-       
+    
+    if (is_null($user)) {
+      $current_user = \Drupal::currentUser()->id();
+	} else {
+      $current_user = $user->id();
+    }
     
     $settings = $this->getRegistrationSettings();
     
@@ -75,12 +79,10 @@ class RegistrationForm extends FormBase {
     //cycle through all of the matches   
     foreach ($nids as $nid) {
       $node = \Drupal\node\Entity\Node::load($nid);
-      $body = $node->body->value;
       $title = $node->title->value;
       $date = $node->field_match_date->value;
       $start_date = $settings['registration_start'];
       $end_date = $settings['registration_end'];
-      $today = date ( "Y-m-d" );
     
       // for all nodes in the future
       if (($date >= $start_date) & ($date <= $end_date)  /* & ($date >= $today) */ ) {
@@ -207,6 +209,11 @@ class RegistrationForm extends FormBase {
       '#weight' => -1000000,
     ];
     
+    $form['User'] = [
+        '#type' => 'textfield',
+        '#value' => $current_user,
+        '#access' => FALSE,
+    ];
     
     $form['actions'] = [
       '#type' => 'actions',
@@ -274,9 +281,15 @@ class RegistrationForm extends FormBase {
      */
     $form_values = $form_state->getValues(array());
     $form_input = $form_state->getUserInput(array());
+    $user = $form_values['User'];
     
     $settings = $this->getRegistrationSettings();
-    $current_user = \Drupal::currentUser()->id();
+    
+    if (is_null($user)) {
+        $current_user = \Drupal::currentUser()->id();
+    } else {
+        $current_user = $user;
+    }
     
     //Get all nodes of type match
     $query = \Drupal::entityQuery('node')
@@ -342,6 +355,7 @@ class RegistrationForm extends FormBase {
       }
       if ($is_valid_nid == TRUE) {
         // only save the entity if the NID existed on the form
+        $entity->set('user_id', $current_user);
         $entity->save();
       }
     }

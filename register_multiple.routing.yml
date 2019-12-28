@@ -19,12 +19,17 @@ register_multiple.description:
     _permission: 'register multiple others'
 
 register_multiple.registration_form:
-  path: '/match_registration/registration-form'
+  path: '/user/availability/{user}'
   defaults:
     _form:  '\Drupal\register_multiple\Form\RegistrationForm'
     _title: 'Multiple Match Registration'
+    user: 0
   requirements:
     _permission: 'register multiple self'
+  options:
+    parameters:
+      user:
+        type: entity:user
 
 register_multiple.configuration_form:
   path: '/admin/config/content/register_multiple'
