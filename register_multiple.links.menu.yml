@@ -1,11 +1,4 @@
 # Define default links for this module.
-register_multiple.description:
-  title: Manage user availability
-  description: Set availability for members.
-  route_name: register_multiple.description
-  menu_name: reports
-  expanded: TRUE
-
 register_multiple.configuration_form:
   title: Register multiple
   description: Configure Register Multiple module
