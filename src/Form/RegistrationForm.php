@@ -53,10 +53,10 @@ class RegistrationForm extends FormBase {
     $registration_list = array ();
     
     if (is_null($user)) {
-      $current_user = \Drupal::currentUser()->id();
-	} else {
-      $current_user = $user->id();
-    }
+      $user = \Drupal::currentUser();
+	}
+    $current_user = $user->id();
+    $user_name = $user->getDisplayName();
     
     $perm = \Drupal::currentUser()->haspermission('register multiple others');
     
@@ -211,6 +211,12 @@ class RegistrationForm extends FormBase {
     
     $form ['registration_entity'] = $registration_list;
     $form ['registration_entity'] ['#tree'] = FALSE;
+    
+    $form['Username'] = [
+        '#type' => 'item',
+        '#markup' => '<H1>User: ' . $user_name .'</H1>',
+        '#weight' => -2000000,
+    ];
     
     $form['Instructions'] = [
       '#type' => 'item',
