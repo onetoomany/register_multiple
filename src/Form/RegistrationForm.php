@@ -5,6 +5,7 @@ namespace Drupal\register_multiple\Form;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\erf\Entity\Registration;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
 /**
  * Implements the SimpleForm form controller.
@@ -47,11 +48,23 @@ class RegistrationForm extends FormBase {
     return $settings;
   }
   
-  public function buildForm(array $form, FormStateInterface $form_state) {
+  public function buildForm(array $form, FormStateInterface $form_state, $user = NULL) {
  
-    $current_user = \Drupal::currentUser()->id();
     $registration_list = array ();
-       
+    
+    if (is_null($user)) {
+      $user = \Drupal::currentUser();
+	}
+    $current_user = $user->id();
+    $user_name = $user->getDisplayName();
+    
+    $perm = \Drupal::currentUser()->haspermission('register multiple others');
+    
+    if (($current_user != \Drupal::currentUser()->id()) AND !(\Drupal::currentUser()->haspermission('register multiple others'))){
+        //user does not have the rights to register this user for matches
+        $reason = 'The current user does not have the rights to register this user for matches.';
+        throw new AccessDeniedHttpException($reason);
+    }
     
     $settings = $this->getRegistrationSettings();
     
@@ -75,12 +88,10 @@ class RegistrationForm extends FormBase {
     //cycle through all of the matches   
     foreach ($nids as $nid) {
       $node = \Drupal\node\Entity\Node::load($nid);
-      $body = $node->body->value;
       $title = $node->title->value;
       $date = $node->field_match_date->value;
       $start_date = $settings['registration_start'];
       $end_date = $settings['registration_end'];
-      $today = date ( "Y-m-d" );
     
       // for all nodes in the future
       if (($date >= $start_date) & ($date <= $end_date)  /* & ($date >= $today) */ ) {
@@ -201,12 +212,23 @@ class RegistrationForm extends FormBase {
     $form ['registration_entity'] = $registration_list;
     $form ['registration_entity'] ['#tree'] = FALSE;
     
+    $form['Username'] = [
+        '#type' => 'item',
+        '#markup' => '<H1>User: ' . $user_name .'</H1>',
+        '#weight' => -2000000,
+    ];
+    
     $form['Instructions'] = [
       '#type' => 'item',
       '#markup' => $settings['registration_instructions'],
       '#weight' => -1000000,
     ];
     
+    $form['User'] = [
+        '#type' => 'textfield',
+        '#value' => $current_user,
+        '#access' => FALSE,
+    ];
     
     $form['actions'] = [
       '#type' => 'actions',
@@ -274,9 +296,21 @@ class RegistrationForm extends FormBase {
      */
     $form_values = $form_state->getValues(array());
     $form_input = $form_state->getUserInput(array());
+    $user = $form_values['User'];
+    
+    if (($user != \Drupal::currentUser()->id()) AND !(\Drupal::currentUser()->haspermission('register multiple others'))){
+        //user does not have the rights to register this user for matches
+        $reason = 'The current user does not have the rights to register this user for matches.';
+        throw new AccessDeniedHttpException($reason);
+    }
     
     $settings = $this->getRegistrationSettings();
-    $current_user = \Drupal::currentUser()->id();
+    
+    if (is_null($user)) {
+        $current_user = \Drupal::currentUser()->id();
+    } else {
+        $current_user = $user;
+    }
     
     //Get all nodes of type match
     $query = \Drupal::entityQuery('node')
@@ -319,16 +353,16 @@ class RegistrationForm extends FormBase {
       $inner_array = array('target_id' => $nid, 'target_type' => 'node');
       $value_array = array(0 => $inner_array);
       $entity->set($settings['registration_field'] ,$value_array,TRUE);
-      
+      $is_valid_nid = FALSE;
       
       foreach ($form_input as $field=>$field_value) {
         if (strpos($field, '|') !== false) {
           $form_nid = substr($field,0,strpos($field, '|'));
           $field_name = substr($field,strpos($field, '|')+1);
           if ($form_nid == $nid) {
+            $is_valid_nid = TRUE;
             
-            
-            if (($existing_reg > 0) AND ($field_name != $settings['registration_field'] )) {
+            if ($field_name != $settings['registration_field'] ) {
               if (is_array($field_value[0])) {
                 $inner_array = array('value' => $field_value[0]['value'], 'target_id' => $field_value[0]['value']);
               } else {
@@ -340,21 +374,14 @@ class RegistrationForm extends FormBase {
           }
        }
       }
-      
-      //if ($existing_reg > 0) {
+      if ($is_valid_nid == TRUE) {
+        // only save the entity if the NID existed on the form
+        $entity->set('user_id', $current_user);
         $entity->save();
-      //}
+      }
     }
     
-    //  $this->messenger()->addMessage($this->t('You specified a title of %title.', ['%title' => $value]));
-    //if (count($field_value) ==0 ) {
-    //   $field_value = $form_state->GetUserInput($field);
-      //   null;
-      // }
-      
-    //$form_display = $form_state->get('form_display');
-    //$registration = $form_state->get('registration');
-    //$extracted = $form_display->extractFormValues($registration, $form, $form_state);
+    $this->messenger()->addMessage(t('Registration for matches successful.'));
     
     
   }
